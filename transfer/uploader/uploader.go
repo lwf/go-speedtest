@@ -32,7 +32,6 @@ func (u *Uploader) Init(url string) chan int {
 }
 
 func (u *Uploader) Sink(size int) transfer.Sink {
-	log.Println("POSTing to", u.url)
 	p := url.Values{"content1": {string(u.buf[0:size])}}
 	r, err := http.NewRequest("POST", u.url, strings.NewReader(p.Encode()))
 	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
