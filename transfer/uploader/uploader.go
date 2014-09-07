@@ -1,7 +1,6 @@
 package uploader
 
 import (
-	"crypto/rand"
 	"log"
 	"net/http"
 	"net/url"
@@ -19,8 +18,6 @@ type Uploader struct {
 
 func (u *Uploader) Init(url string) chan int {
 	u.buf = make([]byte, 500000)
-	_, err := rand.Read(u.buf)
-	assert(err)
 	u.url = url
 	queue := make(chan int, 25*len(payloadSizes))
 	for _, p := range payloadSizes {
@@ -32,15 +29,15 @@ func (u *Uploader) Init(url string) chan int {
 }
 
 func (u *Uploader) Sink(size int) transfer.Sink {
-	p := url.Values{"content1": {string(u.buf[0:size])}}
-	r, err := http.NewRequest("POST", u.url, strings.NewReader(p.Encode()))
+	p := url.Values{"content1": {string(u.buf[0:size])}}.Encode()
+	r, err := http.NewRequest("POST", u.url, strings.NewReader(p))
 	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	assert(err)
 	c := &http.Client{}
 	s := &sink{
 		request: r,
 		client:  c,
-		size:    int64(size),
+		size:    int64(len(p)),
 	}
 	return s
 }
