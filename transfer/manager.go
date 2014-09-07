@@ -4,6 +4,7 @@ import (
 	"log"
 	"sync"
 	"sync/atomic"
+	"time"
 )
 
 type Result struct {
@@ -32,10 +33,13 @@ func (d *Manager) Run(worker Worker, n int, progress func()) int64 {
 }
 
 func (d *Manager) workerLoop(worker Worker, queue <-chan int, progress func(), c *int64) {
+	timer := time.After(10 * time.Second)
 	results := make(chan Result)
 	for {
 		select {
 		case <-d.done:
+			return
+		case <-timer:
 			return
 		default:
 		}
