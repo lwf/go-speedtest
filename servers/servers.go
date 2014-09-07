@@ -17,6 +17,7 @@ type Server struct {
 	Url       string  `xml:"url,attr"`
 	Country   string  `xml:"country,attr"`
 	Id        int     `xml:"id,attr"`
+	Sponsor   string  `xml:"sponsor,attr"`
 }
 
 func GetServers() Servers {

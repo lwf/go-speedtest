@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"text/tabwriter"
 	"time"
 
 	"github.com/lwf/go-speedtest/config"
@@ -20,18 +21,26 @@ import (
 func main() {
 	var bytes bool
 	var id int
+	var list bool
 	flag.BoolVar(&bytes, "bytes", false, "Report in bytes rather than bits")
+	flag.BoolVar(&list, "list", false, "Print a list of servers and their IDs, then exit")
 	flag.IntVar(&id, "id", 0, "Id of server to use")
 	flag.Parse()
 
 	log.Println("Retrieving configuration from speedtest.net...")
 	config := config.GetConfig()
 
-	var url string
+	log.Println("Retrieving server list from speedtest.net...")
 	s := servers.GetServers()
+	servers.SortByDistance(config, s.Servers)
+
+	if list == true {
+		printList(s)
+		return
+	}
+
+	var url string
 	if id == 0 {
-		log.Println("Retrieving server list from speedtest.net...")
-		servers.SortByDistance(config, s.Servers)
 		s2 := s.Servers[0:5]
 		servers.SortByLatency(config, s2)
 		url = s2[0].Url
@@ -74,6 +83,15 @@ func main() {
 			fmt.Printf("\n%s speed: %.2f %s/s\n", worker, speed, unit)
 		}
 	}
+}
+
+func printList(s servers.Servers) {
+	w := tabwriter.NewWriter(os.Stdout, 4, 1, 2, ' ', 0)
+	fmt.Fprintf(w, "Id\tSponsor\tCountry\n")
+	for _, server := range s.Servers {
+		fmt.Fprintf(w, "%d\t%s\t%s\n", server.Id, server.Sponsor, server.Country)
+	}
+	w.Flush()
 }
 
 func measure(manager *transfer.Manager, worker transfer.Worker, progress func()) float64 {
