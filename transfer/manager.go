@@ -59,10 +59,8 @@ func (d *Manager) workerLoop(worker Worker, queue <-chan int, progress func(), c
 			select {
 			case <-d.done:
 				sink.Close()
-				select {
-				case result := <-results:
-					atomic.AddInt64(c, result.n)
-				}
+				result := <-results
+				atomic.AddInt64(c, result.n)
 				return
 			case result := <-results:
 				assert(result.err)
