@@ -33,10 +33,8 @@ func (u *Uploader) Sink(size int) transfer.Sink {
 	r, err := http.NewRequest("POST", u.url, strings.NewReader(p))
 	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	assert(err)
-	c := &http.Client{}
 	s := &sink{
 		request: r,
-		client:  c,
 		size:    int64(len(p)),
 	}
 	return s
@@ -48,12 +46,11 @@ func (*Uploader) String() string {
 
 type sink struct {
 	request *http.Request
-	client  *http.Client
 	size    int64
 }
 
 func (s *sink) Process() (int64, error) {
-	r, err := s.client.Do(s.request)
+	r, err := http.DefaultClient.Do(s.request)
 	if err != nil {
 		return 0, err
 	}
@@ -61,11 +58,8 @@ func (s *sink) Process() (int64, error) {
 	return s.size, nil
 }
 
-type canceler interface {
-	CancelRequest(*http.Request)
-}
-
-func (s *sink) Close() error { // TODO: implement this somehow
+func (s *sink) Close() error {
+	http.DefaultTransport.(*http.Transport).CancelRequest(s.request)
 	return nil
 }
 
